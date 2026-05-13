@@ -34,14 +34,14 @@ The complication: most LW-BenchHub tasks (including `LiftObj`) anchor object pla
 
 ```
 ┌─────────────────┐     ┌───────────────────┐     ┌──────────────────┐
-│  Photo capture  │ ──▶ │  COLMAP + 3DGUT   │ ──▶ │   USDZ + USD     │
+│  Photo capture  │ ──▶│  COLMAP + 3DGUT   │ ──▶ │   USDZ + USD     │
 └─────────────────┘     └───────────────────┘     │  (splat +        │
                                                   │   colliders)     │
                                                   └──────────────────┘
                                                             │
                                                             ▼
 ┌─────────────────┐     ┌───────────────────┐     ┌──────────────────┐
-│  Training or    │ ◀── │   LW-BenchHub     │ ◀── │  LiftObjFreeform │
+│  Training or    │ ◀── │   LW-BenchHub     │ ◀──│  LiftObjFreeform │
 │  eval rollout   │     │   (Isaac Lab)     │     │  + CSV pose      │
 └─────────────────┘     └───────────────────┘     │  + task YAML     │
                                                   └──────────────────┘

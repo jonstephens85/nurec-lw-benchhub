@@ -1,0 +1,2 @@
+robot,layout,task,init_robot_base_pos,init_robot_base_ori,object_init_offset
+LeRobot-RL,/home/jonathan/lw_benchhub/assets/garden_scene_with_proxies.usd,LiftObjFreeform,"[-0.18, -0.25, 0.73]","[0.0, 0.0, 3.70]","[0.0, 0.0]"

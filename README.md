@@ -2,9 +2,6 @@
 
 > Use NVIDIA NuRec captures as photoreal environments for [LW-BenchHub](https://github.com/LightwheelAI/LW-BenchHub) robotics tasks.
 
-<!-- HERO IMAGE: replace with high-res screenshot of LeRobot on patio table -->
-![LeRobot SO100 mounted in a NuRec scene, lifting a cube in a Gaussian splat environment](images/hero_lerobot_patio.png)
-
 This guide shows how to use a NuRec scene as a photorealistic simulation environment inside LW-BenchHub.
 
 The example uses the SO-101 LeRobot arm in the open-source garden scene to get started with a simple object-lifting task. The same pattern can be adapted to your own captured scenes, different robots, different object placements, and other LW-BenchHub tasks.

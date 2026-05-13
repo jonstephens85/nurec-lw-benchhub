@@ -69,11 +69,43 @@ You'll keep the 3DGRUT environment and the LW-BenchHub environment isolated. The
 
 ---
 
-## Part 1 — Capture and reconstruct your scene
+## Part 1 — Prepare Data for NuRec / 3DGRUT Scene Reconstruction
 
 > **Canonical install instructions** for 3DGRUT and 3DGUT live in the [`nv-tlabs/3dgrut`](https://github.com/nv-tlabs/3dgrut) repo. The summary here is enough to get a USDZ; see upstream for the most current setup, especially around CUDA versioning and Blackwell GPU support.
 
-### 1.1 Install COLMAP
+For this example, I use the `garden` scene from the MipNeRF360 dataset as the starting point. That keeps the tutorial focused on the LW-BenchHub integration instead of phone capture and reconstruction quality.
+
+You can also use your own captured scene. The workflow is the same once you have a trained 3DGRUT / NuRec export: open the USDZ in Isaac Sim, add physics proxies, save a USD, and point LW-BenchHub at that scene.
+
+If you already have a NuRec or 3DGRUT scene exported as USDZ, you can skip ahead to Part 2.
+
+### 1.1 Get the garden dataset
+
+Download the MipNeRF360 `garden` scene from Hugging Face:
+
+https://huggingface.co/datasets/mileleap/mipnerf360
+
+Place it somewhere stable, for example:
+
+```bash
+mkdir -p ~/datasets/mipnerf360
+# download / extract garden into:
+# ~/datasets/mipnerf360/garden
+```
+
+### Optional: process your own dataset
+
+If you want to use your own captured scene instead of the MipNeRF360 garden scene, you first need to process your images with COLMAP.
+
+#### Capture
+
+Smartphone works well for initial testing. Aim for ~60% overlap between adjacent images, slow loop around your subject with multiple heights, lock focus and exposure if your phone allows it. Convert HEIC → JPG before COLMAP if you're on iPhone.
+
+For tabletop manipulation scenes, capture both the wider room context *and* close-ups of the surface where the robot will operate. The denser feature coverage on the manipulation surface pays off in splat sharpness exactly where you need it.
+
+#### Processing Data
+
+To install COLMAP:
 
 ```bash
 sudo apt-get update
@@ -82,9 +114,76 @@ sudo apt-get install -y colmap
 
 Verify: `colmap --help | head -1` should print COLMAP's banner.
 
+The easiest way to start is with COLMAP's Automatic Reconstruction feature:
+
+1. Launch COLMAP
+2. Select **Reconstruction → Automatic Reconstruction**
+3. Select your workspace folder and images folder
+4. Important: select either the `PINHOLE` or `SIMPLE_PINHOLE` camera model for 3DGUT compatibility
+5. Start the reconstruction
+
+Once COLMAP finishes, verify that the sparse reconstruction looks coherent before moving on to 3DGRUT / 3DGUT training.
+
+#### Using COLMAP from the command line
+
+For more control or automation, you can also run COLMAP from the command line.
+
+```bash
+mkdir -p ./colmap/sparse
+
+# Feature detection and extraction
+colmap feature_extractor \
+    --database_path ./colmap/database.db \
+    --image_path ./images/ \
+    --ImageReader.single_camera 1 \
+    --ImageReader.camera_model PINHOLE \
+    --SiftExtraction.max_image_size 2000 \
+    --SiftExtraction.estimate_affine_shape 1 \
+    --SiftExtraction.domain_size_pooling 1
+
+# Feature matching
+colmap exhaustive_matcher \
+    --database_path ./colmap/database.db \
+    --SiftMatching.use_gpu 1
+
+# Sparse reconstruction
+colmap mapper \
+    --database_path ./colmap/database.db \
+    --image_path ./images/ \
+    --output_path ./colmap/sparse
+
+# Visualize for verification
+colmap gui \
+    --import_path ./colmap/sparse/0 \
+    --database_path ./colmap/database.db \
+    --image_path ./images/
+```
+
+#### Command parameters
+
+- `database_path`: path to the COLMAP database file
+- `image_path`: directory containing your photos
+- `ImageReader.single_camera`: assumes all images come from the same camera
+- `ImageReader.camera_model`: camera model used for reconstruction. Use `PINHOLE` or `SIMPLE_PINHOLE` for 3DGUT compatibility
+- `SiftExtraction.max_image_size`: maximum image dimension used during feature extraction
+- `output_path`: directory where COLMAP writes the sparse reconstruction
+
+#### COLMAP output
+
+Once complete, you should have:
+
+- A sparse point cloud of the scene
+- Camera pose data for the registered images
+- A project folder containing:
+  - `database.db`: COLMAP database
+  - `images/`: original photos
+  - `sparse/`: reconstruction data
+
+For 3DGUT training, the important thing is that your scene folder contains the image data and COLMAP sparse reconstruction in a structure that 3DGRUT can read.
+
 ### 1.2 Install 3DGRUT (UV path)
 
-I recommend the UV install — it's significantly faster than conda and handles dependencies more cleanly.
+UV install is recommended — it's significantly faster than conda and handles dependencies more cleanly.
 
 ```bash
 # Install UV if you don't have it
@@ -111,54 +210,12 @@ python -c "import torch; print('CUDA:', torch.cuda.is_available(), torch.version
 python -c "import threedgrut; print('3DGRUT OK')"
 ```
 
-### 1.3 Capture
-
-Phone is fine. Aim for ~60% overlap between adjacent images, slow loop around your subject with multiple heights, lock focus and exposure if your phone allows it. Convert HEIC → JPG before COLMAP if you're on iPhone.
-
-For tabletop manipulation scenes, capture both the wider room context *and* close-ups of the surface where the robot will operate. The denser feature coverage on the manipulation surface pays off in splat sharpness exactly where you need it.
-
-### 1.4 Run COLMAP
-
-3DGUT specifically requires the `PINHOLE` or `SIMPLE_PINHOLE` camera model. The flag is non-negotiable.
-
-```bash
-mkdir -p /path/to/scene/{colmap/sparse,images}
-# put your images at /path/to/scene/images/
-
-colmap feature_extractor \
-    --database_path /path/to/scene/colmap/database.db \
-    --image_path    /path/to/scene/images \
-    --ImageReader.single_camera 1 \
-    --ImageReader.camera_model PINHOLE \
-    --SiftExtraction.max_image_size 2000 \
-    --SiftExtraction.estimate_affine_shape 1 \
-    --SiftExtraction.domain_size_pooling 1
-
-colmap exhaustive_matcher \
-    --database_path /path/to/scene/colmap/database.db \
-    --SiftMatching.use_gpu 1
-
-colmap mapper \
-    --database_path /path/to/scene/colmap/database.db \
-    --image_path    /path/to/scene/images \
-    --output_path   /path/to/scene/colmap/sparse
-```
-
-**Verify the sparse reconstruction in the COLMAP GUI** before training. You're looking for: a coherent point cloud (the rough shape of your scene should be visible), most images registered (not just a handful), no obvious drift. A bad sparse leads to a bad splat — no amount of 3DGUT training fixes it.
-
-```bash
-colmap gui \
-    --import_path /path/to/scene/colmap/sparse/0 \
-    --database_path /path/to/scene/colmap/database.db \
-    --image_path /path/to/scene/images
-```
-
 ### 1.5 Train 3DGUT and export USDZ
 
 The MCMC densification config (`apps/colmap_3dgut_mcmc.yaml`) gives sharper thin structures and is what the NuRec mono workflow recommends.
 
 ```bash
-cd /path/to/3dgrut  # back to 3DGRUT repo
+cd /path/to/3dgrut 
 python train.py \
     --config-name apps/colmap_3dgut_mcmc.yaml \
     path=/path/to/scene/colmap \

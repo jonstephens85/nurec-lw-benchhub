@@ -1,0 +1,9 @@
+_base_:
+  - rl_base
+task: LiftObjFreeform                                                          # Our freeform task class
+robot: LeRobot-RL                                                              # Same robot as the original
+layout: /home/jonathan/lw_benchhub/assets/garden_scene_with_proxies.usd        # Your USD path
+rl: LeRobotLiftObjStateRL                                                      # Reuse the existing RL config
+num_envs: 10
+usd_simplify: false                                                            # Don't try to simplify a splat USD
+enable_cameras: false

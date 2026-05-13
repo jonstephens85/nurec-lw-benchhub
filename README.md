@@ -1,25 +1,15 @@
 # nurec-lw-benchhub
 
-> Use NVIDIA NuRec captures as photoreal environments for [LW-BenchHub](https://github.com/LightwheelAI/LW-BenchHub) robotics tasks. No fork, no upstream rewrites — additive integration via files you drop into your LW-BenchHub install.
+> Use NVIDIA NuRec captures as photoreal environments for [LW-BenchHub](https://github.com/LightwheelAI/LW-BenchHub) robotics tasks.
 
 <!-- HERO IMAGE: replace with high-res screenshot of LeRobot on patio table -->
-![LeRobot SO100 mounted on a NuRec-captured patio table, lifting a cube in a Gaussian splat environment](images/hero_lerobot_patio.png)
+![LeRobot SO100 mounted in a NuRec scene, lifting a cube in a Gaussian splat environment](images/hero_lerobot_patio.png)
 
-A LeRobot SO100 arm running a PPO policy in a real-world patio environment I captured on my phone, reconstructed with 3DGUT, and dropped into a LW-BenchHub `LiftObj` task. The kitchen counter you'd normally see is replaced with my actual patio table. Everything below the visual layer — robot, task, rewards, training pipeline — is unchanged from the stock LW-BenchHub workflow.
+This guide shows how to use a NuRec scene as a photorealistic simulation environment inside LW-BenchHub.
 
-This guide walks through every step of building that.
+The example uses the SO-101 LeRobot arm in the open-source garden scene to get started with a simple object-lifting task. The same pattern can be adapted to your own captured scenes, different robots, different object placements, and other LW-BenchHub tasks.
 
----
-
-## Why this exists
-
-I wanted to evaluate robot policies in environments that look like the real world, not synthetic kitchens. LW-BenchHub has the robotics infrastructure — 268 tasks, multi-robot support, RL training pipelines on Isaac Lab-Arena. NuRec has the photoreal scene reconstruction — phone capture → COLMAP → 3DGUT → USDZ. Connecting them turns out to be cleaner than I expected: Lightwheel already built the hook for loading custom USDs (the `local_scene_path` parameter on `KitchenArena`), it's just undocumented and the surrounding code assumes robocasa kitchen fixtures exist.
-
-The contribution here is a small task pattern (`LiftObjFreeform`) that decouples manipulation tasks from those fixture assumptions, plus the recipe for wiring a NuRec USD into the existing scene loader. Once you have it, the same pattern extends to any of the 268 LW-BenchHub tasks.
-
-**Who this is for:** robotics developers who already know their way around Isaac Lab and have used LW-BenchHub at least once. Familiarity with 3DGS / Gaussian splats helps but isn't required — this guide covers the relevant pieces.
-
-**What you get:** a working integration that lets you train and evaluate RL policies in real-world scenes captured on a phone.
+The goal is to give you the shortest working path from a NuRec scene to a running robotics training or evaluation task in LW-BenchHub.
 
 ---
 
@@ -70,9 +60,9 @@ The complication: most LW-BenchHub tasks (including `LiftObj`) anchor object pla
 - ~50GB free disk for splat training outputs and LW-BenchHub assets
 
 **Software**
-- COLMAP
-- 3DGRUT (provides 3DGUT) — separate conda or UV env, CUDA 11.8 or 12.8
-- LW-BenchHub — separate conda env, CUDA 12.8, Python 3.11
+- [COLMAP](https://colmap.github.io/install.html)
+- [3DGRUT](https://github.com/nv-tlabs/3dgrut) — recommended install via UV
+- [LW-BenchHub](https://github.com/LightwheelAI/LW-BenchHub)
 - Isaac Sim 5.0+
 
 You'll keep the 3DGRUT environment and the LW-BenchHub environment isolated. They use different CUDA versions, and 3DGRUT only runs during the scene-prep phase. Once you have a USDZ, you live entirely in the LW-BenchHub environment.

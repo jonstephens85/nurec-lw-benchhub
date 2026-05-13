@@ -264,7 +264,7 @@ The mental model:
 
 ### 2.1 Open the USDZ in Isaac Sim
 
-Launch Isaac Sim 5.0+, new empty stage, **File → Import** the `convert.usdz` from your 3DGUT output. The splat appears as a NuRec volume prim. You can navigate with WASD or right-click drag.
+Launch Isaac Sim 5.0+, new empty stage, **File > Open** the `convert.usdz` (or whatever you named the USDZ file) from your 3DGUT output. The splat appears as a NuRec volume prim. You can navigate with WASD or right-click drag.
 
 The splat almost certainly won't be at the right orientation, height, or scale relative to world origin. That's the next two steps.
 
@@ -286,40 +286,37 @@ After scaling, you may need to translate the splat down (or up) to put the floor
 
 **Ground plane:**
 
-1. **Create → Physics → Ground Plane**
+1. **Create → Mesh → Plane**
 2. Position it at z=0 (default)
 3. Make sure it covers the floor area of your splat (scale up if needed)
+4. Right click the ground plane in the object tree and select **Add → Physics → Collider**
 
 **Table collider:**
 
-For a round table, use a thin cylinder:
+For a round table, use a disk. For Rectangular tables, us a plane:
 
-1. **Create → Shapes → Cylinder**
-2. Set scale to make it a thin disc matching your table — e.g., `(table_radius, table_radius, 0.01)`
+1. **Create > Mesh > Disk**
+2. Set scale to make it match your table
 3. Drag it up to sit on top of the visible table surface in the splat
-4. **Physics → Collider** (not Rigid Body — static)
+4. Right click the table plane in the object tree and select **Add → Physics → Collider**
 
 For a rectangular surface, use a thin box. For complex shapes, combine primitives or import a low-poly mesh with convex decomposition.
 
 ### 2.4 Make the proxies invisible-but-shadow-casting
 
-For each proxy (ground plane and table collider):
+A proxy mesh provides a surface for shadow casting, grounding objects visually in the scene:
 
-1. **Property → Visibility → invisible**
-2. **Property → Geometry → Matte Object → true**
-
-Then register the proxies with the NuRec volume:
-
-1. Select the NuRec volume prim (the splat root)
-2. **Property → NuRec/Volume → Proxy** field
-3. Click `+` and add the ground plane
-4. Click `+` again and add the table collider
+1. Select the **NuRec prim** (the volume prim under the global xform)
+2. In the **Raw USD Properties** panel, locate the **NuRec/Volume** section
+3. Find the **Proxy** field and click **+** to add your proxy mesh prim
+4. Select your ground/table plane again
+5. Ensure that **Geometry → Matte** Object property is enabled
 
 This is what makes shadows from objects above the table land correctly on the splat's rendered table surface. Without matte objects, objects look like they're floating.
 
 ### 2.5 Dress rehearsal
 
-Drop a small test cube (default Create → Shapes → Cube, scaled to ~0.05) above your table proxy. Hit play. The cube should fall and rest on the proxy at the visible table surface level. If it falls through, the proxy isn't aligned. If it rests visibly above the splat's table, the proxy is too high.
+Drop a small test cube (Create → Shapes → Cube, scaled to ~0.05, add Physics → Rigid Body with Collider Presets) above your table proxy. Hit play. The cube should fall and rest on the proxy at the visible table surface level. If it falls through, the proxy isn't aligned. If it rests visibly above the splat's table, the proxy is too high.
 
 If anything looks off, also:
 
@@ -328,7 +325,9 @@ If anything looks off, also:
 
 ### 2.6 Save
 
-`File → Save As → garden_scene_with_proxies.usd` (or whatever you want to call it). Use `.usd`, not `.usdz`. Place it somewhere stable — I keep mine at `~/lw_benchhub/assets/garden_scene_with_proxies.usd`.
+`File → Save As → garden_scene_with_proxies.usd` (or whatever you want to call it). Use `.usd`, not `.usdz`.
+
+Place it somewhere stable — recommended in an assets folder withing the lw_benchhub repository: `~/lw_benchhub/assets/garden_scene_with_proxies.usd`.
 
 Note that this `.usd` file *references* your `convert.usdz`. The reference is by absolute path. Either keep both files in known stable locations, or update the reference path in Isaac Sim if you move things later. If LW-BenchHub fails to load with a "Could not open asset" warning, that's the reference being broken.
 

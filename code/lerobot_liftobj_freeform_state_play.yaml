@@ -1,0 +1,4 @@
+_base_:
+  - lerobot_liftobj_freeform_state
+num_envs: 1
+checkpoint: /path/to/your/best_agent.pt

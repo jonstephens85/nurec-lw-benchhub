@@ -97,13 +97,13 @@ mkdir -p ~/datasets/mipnerf360
 
 If you want to use your own captured scene instead of the MipNeRF360 garden scene, you first need to process your images with COLMAP.
 
-#### Capture
+#### **Capture**
 
 Smartphone works well for initial testing. Aim for ~60% overlap between adjacent images, slow loop around your subject with multiple heights, lock focus and exposure if your phone allows it. Convert HEIC → JPG before COLMAP if you're on iPhone.
 
 For tabletop manipulation scenes, capture both the wider room context *and* close-ups of the surface where the robot will operate. The denser feature coverage on the manipulation surface pays off in splat sharpness exactly where you need it.
 
-#### Processing Data
+#### **Processing Data**
 
 To install COLMAP:
 
@@ -124,7 +124,7 @@ The easiest way to start is with COLMAP's Automatic Reconstruction feature:
 
 Once COLMAP finishes, verify that the sparse reconstruction looks coherent before moving on to 3DGRUT / 3DGUT training.
 
-#### Using COLMAP from the command line
+#### **Using COLMAP from the command line**
 
 For more control or automation, you can also run COLMAP from the command line.
 
@@ -159,7 +159,7 @@ colmap gui \
     --image_path ./images/
 ```
 
-#### Command parameters
+#### **Command parameters**
 
 - `database_path`: path to the COLMAP database file
 - `image_path`: directory containing your photos
@@ -168,7 +168,7 @@ colmap gui \
 - `SiftExtraction.max_image_size`: maximum image dimension used during feature extraction
 - `output_path`: directory where COLMAP writes the sparse reconstruction
 
-#### COLMAP output
+#### **COLMAP output**
 
 Once complete, you should have:
 
@@ -210,7 +210,7 @@ python -c "import torch; print('CUDA:', torch.cuda.is_available(), torch.version
 python -c "import threedgrut; print('3DGRUT OK')"
 ```
 
-### 1.5 Train 3DGUT and export USDZ
+### 1.3 Train 3DGUT and export USDZ
 
 The MCMC densification config (`apps/colmap_3dgut_mcmc.yaml`) gives sharper thin structures and is what the NuRec mono workflow recommends.
 
@@ -221,17 +221,23 @@ python train.py \
     path=/path/to/scene/colmap \
     out_dir=/path/to/scene/output \
     experiment_name=my_scene_v1 \
-    dataset.downsample_factor=2 \
-    export_usdz.enabled=true \
-    export_usdz.apply_normalizing_transform=true
+    export_ply.enabled=true \
+    export_usd.enabled=true \
+    export_usd.apply_normalizing_transform=true
 ```
 
-Two flags matter for the LW-BenchHub handoff:
+Three flags matter for the LW-BenchHub handoff:
 
+- `export_ply.enabled=true` produces `export_last.ply` a 3DGS native file output. De
 - `export_usdz.enabled=true` produces `convert.usdz` (or sometimes `export_last.usdz` depending on version) — the file Isaac Sim will load
 - `export_usdz.apply_normalizing_transform=true` centers and roughly scales the scene near the origin
+- **Note:** `apply_normalizing_transform` does *not* guarantee the floor sits at z=0 or that the scale matches real-world meters. You will almost certainly need to re-anchor and possibly rescale in Isaac Sim. Plan for it.
 
-**Note:** `apply_normalizing_transform` does *not* guarantee the floor sits at z=0 or that the scale matches real-world meters. You will almost certainly need to re-anchor and possibly rescale in Isaac Sim. Plan for it.
+**IMPORTANT**
+
+The expored usdz file may not be compatible with Isaac Sim. If the file does not render in Isaac Sim, convert the PLY file to a compatible USD format using:
+
+`python -m threedgrut.export.scripts.ply_to_usd path/to/your/model.ply --output_file path/to/output.usdz`
 
 Output paths to remember after training completes:
 

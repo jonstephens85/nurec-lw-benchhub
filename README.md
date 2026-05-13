@@ -23,7 +23,7 @@ The contribution here is a small task pattern (`LiftObjFreeform`) that decouples
 
 ---
 
-## TL;DR
+## Workflow Overview
 
 1. Capture a real-world scene on your phone (~50-200 photos)
 2. Run COLMAP for camera poses
@@ -32,8 +32,6 @@ The contribution here is a small task pattern (`LiftObjFreeform`) that decouples
 5. Drop four small files into your LW-BenchHub install (one task class, one CSV row, two YAMLs)
 6. Add a single decorator line to enable RL on the new task
 7. Run training or eval with `--task_config lerobot_liftobj_freeform_state[_play]`
-
-End-to-end on a fresh setup takes a day. Iterating on a new scene after that takes about an hour.
 
 ---
 
@@ -68,7 +66,7 @@ The complication: most LW-BenchHub tasks (including `LiftObj`) anchor object pla
 
 **Hardware**
 - Linux (Ubuntu 22.04 tested; 24.04 works with a GCC-11 workaround)
-- NVIDIA RTX GPU. RT cores recommended for 3DGRT, not required for 3DGUT
+- NVIDIA RTX GPU.
 - ~50GB free disk for splat training outputs and LW-BenchHub assets
 
 **Software**

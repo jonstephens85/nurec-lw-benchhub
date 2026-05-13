@@ -34,7 +34,7 @@ The complication: most LW-BenchHub tasks (including `LiftObj`) anchor object pla
 
 ```
 ┌─────────────────┐     ┌───────────────────┐     ┌──────────────────┐
-│  Phone capture  │ ──▶ │  COLMAP + 3DGUT   │ ──▶ │   USDZ + USD     │
+│  Photo capture  │ ──▶ │  COLMAP + 3DGUT   │ ──▶ │   USDZ + USD     │
 └─────────────────┘     └───────────────────┘     │  (splat +        │
                                                   │   colliders)     │
                                                   └──────────────────┘
